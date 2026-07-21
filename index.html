@@ -56,9 +56,10 @@
         const paddleHeight = 80;
         const WINNING_SCORE = 11;
 
-        // Game State: 'START', 'PLAYING', or 'GAMEOVER'
+        // Game State: 'START', 'DIFFICULTY', 'PLAYING', or 'GAMEOVER'
         let gameState = 'START';
         let gameMode = '2P'; // '1P' or '2P'
+        let difficulty = 'Medium'; // 'Easy', 'Medium', or 'Hard'
         let winner = null;
 
         // Player 1 (Left)
@@ -79,7 +80,8 @@
             height: paddleHeight,
             score: 0,
             speed: 7,
-            aiSpeed: 4.5 // Speed for the AI bot
+            aiSpeed: 4.5,
+            aiMargin: 15 // Margin of error for tracking
         };
 
         // Ball
@@ -105,18 +107,38 @@
             if (e.key === 'ArrowUp') keys.ArrowUp = true;
             if (e.key === 'ArrowDown') keys.ArrowDown = true;
 
-            // Mode Selection on Start Page
+            // Start Screen Mode Selection
             if (gameState === 'START') {
                 if (e.key === '1') {
                     gameMode = '1P';
-                    controlsText.innerHTML = '<p><span>Player 1 (Left):</span> <strong>W</strong> / <strong>S</strong> &nbsp;|&nbsp; <span>Right Side:</span> <strong>AI BOT</strong></p>';
-                    gameState = 'PLAYING';
+                    gameState = 'DIFFICULTY'; // Go to difficulty selection
                 } else if (e.key === '2') {
                     gameMode = '2P';
                     controlsText.innerHTML = '<p><span>Player 1 (Left):</span> <strong>W</strong> / <strong>S</strong> &nbsp;|&nbsp; <span>Player 2 (Right):</span> <strong>Up Arrow</strong> / <strong>Down Arrow</strong></p>';
                     gameState = 'PLAYING';
                 }
-            } else if (gameState === 'GAMEOVER') {
+            } 
+            // Difficulty Selection Screen for 1-Player
+            else if (gameState === 'DIFFICULTY') {
+                if (e.key === '1') {
+                    difficulty = 'Easy';
+                    player2.aiSpeed = 3.5;
+                    player2.aiMargin = 30;
+                    start1PGame();
+                } else if (e.key === '2') {
+                    difficulty = 'Medium';
+                    player2.aiSpeed = 5.0;
+                    player2.aiMargin = 15;
+                    start1PGame();
+                } else if (e.key === '3') {
+                    difficulty = 'Hard';
+                    player2.aiSpeed = 6.8;
+                    player2.aiMargin = 5;
+                    start1PGame();
+                }
+            } 
+            // Game Over Restart
+            else if (gameState === 'GAMEOVER') {
                 if (e.key === 'Enter' || e.key === ' ') {
                     resetGame();
                     gameState = 'START';
@@ -130,6 +152,11 @@
             if (e.key === 'ArrowUp') keys.ArrowUp = false;
             if (e.key === 'ArrowDown') keys.ArrowDown = false;
         });
+
+        function start1PGame() {
+            controlsText.innerHTML = `<p><span>Player 1 (Left):</span> <strong>W</strong> / <strong>S</strong> &nbsp;|&nbsp; <span>Right Side:</span> <strong>BOT (${difficulty.toUpperCase()})</strong></p>`;
+            gameState = 'PLAYING';
+        }
 
         function resetBall() {
             ball.x = canvas.width / 2;
@@ -160,28 +187,48 @@
         }
 
         function drawScore() {
-            ctx.font = '32px Courier New';
+            ctx.font = '32px monospace';
             ctx.fillStyle = '#fff';
             ctx.textAlign = 'center';
             ctx.fillText(player1.score, canvas.width / 4, 50);
             ctx.fillText(player2.score, (3 * canvas.width) / 4, 50);
         }
 
-        // Render Start Screen
+        // Render Title Screen
         function drawStartScreen() {
             drawRect(0, 0, canvas.width, canvas.height, '#000');
             
-            ctx.fillStyle = '#fff';
-            ctx.font = '40px Courier New';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '40px monospace';
             ctx.textAlign = 'center';
             ctx.fillText('PING PONG', canvas.width / 2, canvas.height / 2 - 60);
 
-            ctx.font = '20px Courier New';
+            ctx.font = '20px monospace';
             ctx.fillText('SELECT GAME MODE:', canvas.width / 2, canvas.height / 2 - 10);
             
             ctx.fillStyle = '#4CAF50';
             ctx.fillText('PRESS [ 1 ] - 1 PLAYER (vs BOT)', canvas.width / 2, canvas.height / 2 + 35);
             ctx.fillText('PRESS [ 2 ] - 2 PLAYERS', canvas.width / 2, canvas.height / 2 + 75);
+        }
+
+        // Render Difficulty Screen
+        function drawDifficultyScreen() {
+            drawRect(0, 0, canvas.width, canvas.height, '#000');
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '36px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('SELECT BOT DIFFICULTY', canvas.width / 2, canvas.height / 2 - 80);
+
+            ctx.font = '20px monospace';
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillText('PRESS [ 1 ] - EASY', canvas.width / 2, canvas.height / 2 - 10);
+            
+            ctx.fillStyle = '#FF9800';
+            ctx.fillText('PRESS [ 2 ] - MEDIUM', canvas.width / 2, canvas.height / 2 + 30);
+            
+            ctx.fillStyle = '#F44336';
+            ctx.fillText('PRESS [ 3 ] - HARD', canvas.width / 2, canvas.height / 2 + 70);
         }
 
         // Render Game Over Screen
@@ -190,7 +237,7 @@
             drawScore();
             drawNet();
 
-            ctx.font = '32px Courier New';
+            ctx.font = '32px monospace';
             ctx.textAlign = 'center';
 
             // Left Side Results
@@ -211,9 +258,8 @@
                 ctx.fillText(gameMode === '1P' ? 'BOT LOSES!' : 'YOU LOSE!', (3 * canvas.width) / 4, canvas.height / 2);
             }
 
-            // Restart Prompt
             ctx.fillStyle = '#fff';
-            ctx.font = '20px Courier New';
+            ctx.font = '20px monospace';
             ctx.fillText('PRESS [ENTER] OR [SPACE] TO RETURN TO MENU', canvas.width / 2, canvas.height - 50);
         }
 
@@ -229,11 +275,11 @@
                 if (keys.ArrowUp && player2.y > 0) player2.y -= player2.speed;
                 if (keys.ArrowDown && player2.y < canvas.height - player2.height) player2.y += player2.speed;
             } else if (gameMode === '1P') {
-                // AI Bot Logic
+                // AI Bot Logic based on chosen difficulty settings
                 const aiCenter = player2.y + player2.height / 2;
-                if (aiCenter < ball.y - 15) {
+                if (aiCenter < ball.y - player2.aiMargin) {
                     player2.y += player2.aiSpeed;
-                } else if (aiCenter > ball.y + 15) {
+                } else if (aiCenter > ball.y + player2.aiMargin) {
                     player2.y -= player2.aiSpeed;
                 }
             }
@@ -262,56 +308,4 @@
             }
 
             // Scoring & Win Checking
-            if (ball.x < 0) {
-                player2.score++;
-                if (player2.score >= WINNING_SCORE) {
-                    winner = 'player2';
-                    gameState = 'GAMEOVER';
-                } else {
-                    resetBall();
-                }
-            } else if (ball.x > canvas.width) {
-                player1.score++;
-                if (player1.score >= WINNING_SCORE) {
-                    winner = 'player1';
-                    gameState = 'GAMEOVER';
-                } else {
-                    resetBall();
-                }
-            }
-        }
-
-        function render() {
-            if (gameState === 'START') {
-                drawStartScreen();
-            } else if (gameState === 'PLAYING') {
-                drawRect(0, 0, canvas.width, canvas.height, '#000');
-                
-                drawNet();
-                drawScore();
-
-                // Draw Paddles
-                drawRect(player1.x, player1.y, player1.width, player1.height, '#fff');
-                drawRect(player2.x, player2.y, player2.width, player2.height, '#fff');
-                
-                // Draw Ball
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-            } else if (gameState === 'GAMEOVER') {
-                drawGameOverScreen();
-            }
-        }
-
-        // Game Loop
-        function gameLoop() {
-            update();
-            render();
-            requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
-    </script>
-</body>
-</html>
+            if (ball.x < 0)
