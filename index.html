@@ -254,3 +254,142 @@
                 ctx.fillStyle = '#4CAF50';
                 ctx.fillText('PLAYER 2 (RIGHT)', (3 * canvas.width) / 4, canvas.height / 2 - 40);
                 ctx.fillStyle = '#ffffff';
+                ctx.fillText('UP ARROW - Move Up', (3 * canvas.width) / 4, canvas.height / 2);
+                ctx.fillText('DOWN ARROW - Move Down', (3 * canvas.width) / 4, canvas.height / 2 + 30);
+            } else {
+                ctx.fillStyle = '#FF9800';
+                ctx.fillText(`BOT (${difficulty.toUpperCase()})`, (3 * canvas.width) / 4, canvas.height / 2 - 40);
+                ctx.fillStyle = '#aaa';
+                ctx.fillText('AUTOMATIC', (3 * canvas.width) / 4, canvas.height / 2 + 15);
+            }
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px monospace';
+            ctx.fillText('PRESS [ENTER] OR [SPACE] TO START GAME', canvas.width / 2, canvas.height - 40);
+        }
+
+        function drawGameOverScreen() {
+            drawRect(0, 0, canvas.width, canvas.height, '#000');
+            drawScore();
+            drawNet();
+
+            ctx.font = '32px monospace';
+            ctx.textAlign = 'center';
+
+            if (winner === 'player1') {
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillText('YOU WIN!', canvas.width / 4, canvas.height / 2);
+            } else {
+                ctx.fillStyle = '#F44336';
+                ctx.fillText('YOU LOSE!', canvas.width / 4, canvas.height / 2);
+            }
+
+            if (winner === 'player2') {
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillText(gameMode === '1P' ? 'BOT WINS!' : 'YOU WIN!', (3 * canvas.width) / 4, canvas.height / 2);
+            } else {
+                ctx.fillStyle = '#F44336';
+                ctx.fillText(gameMode === '1P' ? 'BOT LOSES!' : 'YOU LOSE!', (3 * canvas.width) / 4, canvas.height / 2);
+            }
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px monospace';
+            ctx.fillText('PRESS [ENTER] OR [SPACE] TO RETURN TO MENU', canvas.width / 2, canvas.height - 50);
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            // Player 1 Movement
+            if (keys.w && player1.y > 0) player1.y -= player1.speed;
+            if (keys.s && player1.y < canvas.height - player1.height) player1.y += player1.speed;
+
+            // Player 2 / Bot Movement
+            if (gameMode === '2P') {
+                if (keys.ArrowUp && player2.y > 0) player2.y -= player2.speed;
+                if (keys.ArrowDown && player2.y < canvas.height - player2.height) player2.y += player2.speed;
+            } else if (gameMode === '1P') {
+                const aiCenter = player2.y + player2.height / 2;
+                if (aiCenter < ball.y - player2.aiMargin) {
+                    player2.y += player2.aiSpeed;
+                } else if (aiCenter > ball.y + player2.aiMargin) {
+                    player2.y -= player2.aiSpeed;
+                }
+            }
+
+            // Move Ball
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // Wall Collisions
+            if (ball.y <= 0 || ball.y >= canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+
+            // Paddle Collisions
+            let currentPaddle = (ball.x < canvas.width / 2) ? player1 : player2;
+
+            if (
+                ball.x - ball.size < currentPaddle.x + currentPaddle.width &&
+                ball.x + ball.size > currentPaddle.x &&
+                ball.y > currentPaddle.y &&
+                ball.y < currentPaddle.y + currentPaddle.height
+            ) {
+                ball.speedX = -ball.speedX * 1.05;
+                let hitPoint = ball.y - (currentPaddle.y + currentPaddle.height / 2);
+                ball.speedY = hitPoint * 0.15;
+            }
+
+            // Scoring
+            if (ball.x < 0) {
+                player2.score++;
+                if (player2.score >= WINNING_SCORE) {
+                    winner = 'player2';
+                    gameState = 'GAMEOVER';
+                } else {
+                    resetBall();
+                }
+            } else if (ball.x > canvas.width) {
+                player1.score++;
+                if (player1.score >= WINNING_SCORE) {
+                    winner = 'player1';
+                    gameState = 'GAMEOVER';
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        function render() {
+            if (gameState === 'START') {
+                drawStartScreen();
+            } else if (gameState === 'DIFFICULTY') {
+                drawDifficultyScreen();
+            } else if (gameState === 'CONTROLS') {
+                drawControlsScreen();
+            } else if (gameState === 'PLAYING') {
+                drawRect(0, 0, canvas.width, canvas.height, '#000');
+                drawNet();
+                drawScore();
+                drawRect(player1.x, player1.y, player1.width, player1.height, '#fff');
+                drawRect(player2.x, player2.y, player2.width, player2.height, '#fff');
+                
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            } else if (gameState === 'GAMEOVER') {
+                drawGameOverScreen();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
