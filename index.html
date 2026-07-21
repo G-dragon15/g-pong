@@ -59,7 +59,7 @@
         // Game State: 'START', 'DIFFICULTY', 'PLAYING', or 'GAMEOVER'
         let gameState = 'START';
         let gameMode = '2P'; // '1P' or '2P'
-        let difficulty = 'Medium'; // 'Easy', 'Medium', or 'Hard'
+        let difficulty = 'Medium';
         let winner = null;
 
         // Player 1 (Left)
@@ -80,8 +80,8 @@
             height: paddleHeight,
             score: 0,
             speed: 7,
-            aiSpeed: 4.5,
-            aiMargin: 15 // Margin of error for tracking
+            aiSpeed: 4.2,
+            aiMargin: 22
         };
 
         // Ball
@@ -111,14 +111,14 @@
             if (gameState === 'START') {
                 if (e.key === '1') {
                     gameMode = '1P';
-                    gameState = 'DIFFICULTY'; // Go to difficulty selection
+                    gameState = 'DIFFICULTY';
                 } else if (e.key === '2') {
                     gameMode = '2P';
                     controlsText.innerHTML = '<p><span>Player 1 (Left):</span> <strong>W</strong> / <strong>S</strong> &nbsp;|&nbsp; <span>Player 2 (Right):</span> <strong>Up Arrow</strong> / <strong>Down Arrow</strong></p>';
                     gameState = 'PLAYING';
                 }
             } 
-            // Difficulty Selection Screen for 1-Player
+            // Difficulty Selection Screen
             else if (gameState === 'DIFFICULTY') {
                 if (e.key === '1') {
                     difficulty = 'Easy';
@@ -127,13 +127,13 @@
                     start1PGame();
                 } else if (e.key === '2') {
                     difficulty = 'Medium';
-                    player2.aiSpeed = 5.0;
-                    player2.aiMargin = 15;
+                    player2.aiSpeed = 4.2; // Toned down from 5.0
+                    player2.aiMargin = 22;  // Increased from 15
                     start1PGame();
                 } else if (e.key === '3') {
                     difficulty = 'Hard';
-                    player2.aiSpeed = 6.8;
-                    player2.aiMargin = 5;
+                    player2.aiSpeed = 5.5; // Toned down from 6.8
+                    player2.aiMargin = 12;  // Increased from 5
                     start1PGame();
                 }
             } 
@@ -194,7 +194,6 @@
             ctx.fillText(player2.score, (3 * canvas.width) / 4, 50);
         }
 
-        // Render Title Screen
         function drawStartScreen() {
             drawRect(0, 0, canvas.width, canvas.height, '#000');
             
@@ -211,7 +210,6 @@
             ctx.fillText('PRESS [ 2 ] - 2 PLAYERS', canvas.width / 2, canvas.height / 2 + 75);
         }
 
-        // Render Difficulty Screen
         function drawDifficultyScreen() {
             drawRect(0, 0, canvas.width, canvas.height, '#000');
             
@@ -231,7 +229,6 @@
             ctx.fillText('PRESS [ 3 ] - HARD', canvas.width / 2, canvas.height / 2 + 70);
         }
 
-        // Render Game Over Screen
         function drawGameOverScreen() {
             drawRect(0, 0, canvas.width, canvas.height, '#000');
             drawScore();
@@ -240,7 +237,6 @@
             ctx.font = '32px monospace';
             ctx.textAlign = 'center';
 
-            // Left Side Results
             if (winner === 'player1') {
                 ctx.fillStyle = '#4CAF50';
                 ctx.fillText('YOU WIN!', canvas.width / 4, canvas.height / 2);
@@ -249,7 +245,6 @@
                 ctx.fillText('YOU LOSE!', canvas.width / 4, canvas.height / 2);
             }
 
-            // Right Side Results
             if (winner === 'player2') {
                 ctx.fillStyle = '#4CAF50';
                 ctx.fillText(gameMode === '1P' ? 'BOT WINS!' : 'YOU WIN!', (3 * canvas.width) / 4, canvas.height / 2);
@@ -270,12 +265,11 @@
             if (keys.w && player1.y > 0) player1.y -= player1.speed;
             if (keys.s && player1.y < canvas.height - player1.height) player1.y += player1.speed;
 
-            // Player 2 Movement (Human or AI Bot)
+            // Player 2 / Bot Movement
             if (gameMode === '2P') {
                 if (keys.ArrowUp && player2.y > 0) player2.y -= player2.speed;
                 if (keys.ArrowDown && player2.y < canvas.height - player2.height) player2.y += player2.speed;
             } else if (gameMode === '1P') {
-                // AI Bot Logic based on chosen difficulty settings
                 const aiCenter = player2.y + player2.height / 2;
                 if (aiCenter < ball.y - player2.aiMargin) {
                     player2.y += player2.aiSpeed;
@@ -307,7 +301,7 @@
                 ball.speedY = hitPoint * 0.15;
             }
 
-            // Scoring & Win Checking
+            // Scoring
             if (ball.x < 0) {
                 player2.score++;
                 if (player2.score >= WINNING_SCORE) {
