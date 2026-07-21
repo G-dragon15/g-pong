@@ -308,4 +308,53 @@
             }
 
             // Scoring & Win Checking
-            if (ball.x < 0)
+            if (ball.x < 0) {
+                player2.score++;
+                if (player2.score >= WINNING_SCORE) {
+                    winner = 'player2';
+                    gameState = 'GAMEOVER';
+                } else {
+                    resetBall();
+                }
+            } else if (ball.x > canvas.width) {
+                player1.score++;
+                if (player1.score >= WINNING_SCORE) {
+                    winner = 'player1';
+                    gameState = 'GAMEOVER';
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        function render() {
+            if (gameState === 'START') {
+                drawStartScreen();
+            } else if (gameState === 'DIFFICULTY') {
+                drawDifficultyScreen();
+            } else if (gameState === 'PLAYING') {
+                drawRect(0, 0, canvas.width, canvas.height, '#000');
+                drawNet();
+                drawScore();
+                drawRect(player1.x, player1.y, player1.width, player1.height, '#fff');
+                drawRect(player2.x, player2.y, player2.width, player2.height, '#fff');
+                
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            } else if (gameState === 'GAMEOVER') {
+                drawGameOverScreen();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
